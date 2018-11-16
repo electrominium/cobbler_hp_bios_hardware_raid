@@ -2,7 +2,7 @@ MANUFACTURER=`/sbin/dmidecode -s system-manufacturer`
 
 if [ \$MANUFACTURER == HP ]; then
 
-	wget http://@@http_server@@/hp_kickstart_tools/hp_kickstart_tools.tar.gz
+	wget http://@@http_server@@/hp_kickstart_tools.tar.gz
 	tar -xzf hp_kickstart_tools.tar.gz
 	modprobe sg
 
