@@ -1,0 +1,86 @@
+MANUFACTURER=`/sbin/dmidecode -s system-manufacturer`
+
+if [ \$MANUFACTURER == HP ]; then
+
+	wget http://@@http_server@@/hp_kickstart_tools/hp_kickstart_tools.tar.gz
+	tar -xzf hp_kickstart_tools.tar.gz
+	modprobe sg
+
+	disks=`./opt/hp/hpssacli/bld/hpssacli ctrl all show config | grep physical | grep -v grep | wc -l`
+	sata=`./opt/hp/hpssacli/bld/hpssacli ctrl all show config | grep physical | grep -v grep | grep -v Solid | wc -l`
+	solidstate=`./opt/hp/hpssacli/bld/hpssacli ctrl all show config | grep physical | grep -v grep | grep -i solid | wc -l`
+
+	for logical in `./opt/hp/hpssacli/bld/hpssacli ctrl all show config | grep logical | awk '{print $2}'`
+	do
+	  ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 ld \$logical delete forced override
+	done
+
+
+	if [ \$solidstate -gt 0 ]; then
+	  if [ \$disks == 1 ]; then
+	     ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=allunassigned raid=0 ssdoverprovisioningoptimization=on forced
+	  elif [ \$disks == 2 ]; then
+	     ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=allunassigned raid=1 ssdoverprovisioningoptimization=on forced
+	  elif [ \$disks == 3 ]; then
+            ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=1I:1:1 raid=0 ssdoverprovisioningoptimization=on forced
+	     ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=allunassigned raid=0 ssdoverprovisioningoptimization=on forced
+          elif [ \$disks == 4 ]; then
+               echo `hostname` | grep -q pes
+               if [ \$? -eq 0 ]; then
+                  ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=1I:1:1 raid=0 ssdoverprovisioningoptimization=on forced
+                  ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=allunassigned raid=0 ssdoverprovisioningoptimization=on forced
+               else
+                  ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=1I:1:1,1I:1:2 raid=1 ssdoverprovisioningoptimization=on forced
+                  ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=allunassigned raid=0 ssdoverprovisioningoptimization=on forced
+               fi
+	  elif [ \$disks == 14 ]; then
+
+	     for logical in `./opt/hp/hpssacli/bld/hpssacli ctrl all show config | grep logical | awk '{print $2}'`
+	     do
+	       ./opt/hp/hpssacli/bld/hpssacli ctrl slot=3 ld \$logical delete forced override
+	     done
+
+	     ./opt/hp/hpssacli/bld/hpssacli ctrl slot=3 create type=ld drives=1I:1:25,1I:1:26 raid=1 ssdoverprovisioningoptimization=on forced
+
+	     for physical in {1..12}
+	     do
+	       ./opt/hp/hpssacli/bld/hpssacli ctrl slot=3 create type=ld drives=1I:1:\$physical raid=0 ssdoverprovisioningoptimization=on forced
+	     done
+	  fi
+
+	fi
+
+	if [ \$sata -gt 0 ]; then
+	  if [ \$disks == 1 ]; then
+	     ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=allunassigned raid=0 forced
+	  elif [ \$disks == 2 ]; then
+	     ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=allunassigned raid=1 forced
+	  elif [ \$disks == 3 ]; then
+	     ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=1I:1:1 raid=0 forced
+    	     ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=allunassigned raid=0 forced
+          elif [ \$disks == 4 ]; then
+               echo `hostname` | grep -q pes
+               if [ \$? -eq 0 ]; then
+                  ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=1I:1:1 raid=0 forced
+                  ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=allunassigned raid=0 forced
+               else
+                  ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=1I:1:1,1I:1:2 raid=1 forced
+                  ./opt/hp/hpssacli/bld/hpssacli ctrl slot=0 create type=ld drives=allunassigned raid=0 forced
+               fi
+	  elif [ \$disks == 14 ]; then
+
+	     for logical in `./opt/hp/hpssacli/bld/hpssacli ctrl all show config | grep logical | awk '{print $2}'`
+	     do
+	       ./opt/hp/hpssacli/bld/hpssacli ctrl slot=3 ld \$logical delete forced override
+	     done
+
+	     ./opt/hp/hpssacli/bld/hpssacli ctrl slot=3 create type=ld drives=1I:1:25,1I:1:26 raid=1 forced
+
+	     for physical in {1..12}
+	     do
+	       ./opt/hp/hpssacli/bld/hpssacli ctrl slot=3 create type=ld drives=1I:1:\$physical raid=0 forced
+	     done
+	  fi
+	fi
+
+fi
