@@ -1,4 +1,4 @@
-# cobbler_hp_bios_hardware_raid
+# cobbler_hp_hardware_raid
 Cobbler snippet to create hardware raid configurations on HP Proliant servers in BIOS 
 
 The snippet can be used to create various hardware raid configuartions on HP Proliant servers in its BIOS even before the OS is installed.
